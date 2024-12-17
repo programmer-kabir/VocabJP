@@ -1,26 +1,35 @@
 import React, { useState } from "react";
 import image from "../../../assets/AuthencationImage/Image.svg";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaSpinner } from "react-icons/fa";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useForm } from "react-hook-form";
 import Container from "../../../Components/Container/Container";
-import {Link} from 'react-router-dom'
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { PiCloudArrowDownBold } from "react-icons/pi";
+import useAuth from "../../../Utils/Hooks/useAuth";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { SaveUser } from "../../../Utils/Apis/SaveUser";
+
 const Signup = () => {
+  const { RegisterUser, updateUserProfile, signInWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prevState) => !prevState);
   };
   const [fileName, setFileName] = useState("");
-
+  const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(false);
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setFileName(file.name);
+      setImagePreview(file);
     } else {
       setFileName("");
+      setImagePreview(null);
     }
   };
   const {
@@ -29,9 +38,63 @@ const Signup = () => {
     formState: { errors },
     watch,
   } = useForm();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
+  const url =
+    "https://api.imgbb.com/1/upload?key=f1e08dc7c44c396aa409d50dfcc797da";
   const onSubmit = (data) => {
     console.log(data);
+    if (!imagePreview) {
+      toast.error("Image Not Find");
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("image", imagePreview);
+    fetch(url, {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((image) => {
+        const photo = image?.data?.display_url;
+        RegisterUser(data.email, data.password)
+          .then((result) => {
+            const loggedUser = result.user;
+            updateUserProfile(data.name, photo)
+              .then((result) => {
+                SaveUser(loggedUser);
+                setLoading(false);
+                toast.success("User Create Successfully");
+              })
+              .catch((error) => {
+                setLoading(false);
+                toast.error(error.message);
+              });
+          })
+          .catch((error) => {
+            setLoading(false);
+            toast.error(error.message);
+          });
+      });
   };
+  const handleGoogleSignIn = () => {
+    setLoading(true);
+    signInWithGoogle()
+      .then((result) => {
+        setLoading(false);
+        toast.success("User login successfully");
+        SaveUser(result.user);
+        navigate(from, { replace: true });
+      })
+      .catch((err) => {
+        setLoading(false);
+        // console.log(err.message);
+        toast.error(err.message);
+      });
+  };
+
   return (
     <Container>
       <section className="flex mt-2 p-2 border rounded-md">
@@ -54,6 +117,7 @@ const Signup = () => {
               <div className="w-full lg:w-1/2 mb-2 lg:mb-0">
                 <button
                   type="button"
+                  onClick={handleGoogleSignIn}
                   className="w-full flex justify-center items-center gap-2 bg-white text-sm text-gray-600 p-2 rounded-md hover:bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-colors duration-300"
                 >
                   <FcGoogle size={20} />
@@ -171,54 +235,61 @@ const Signup = () => {
                 )}
               </div>
               {/* Image */}
-               
-    <div>
-    
-      
-      <label
-        htmlFor="photo-dropbox"
-        className="flex cursor-pointer appearance-none justify-center rounded-md border border-dashed border-gray-300 bg-white px-3 py-3 text-sm transition hover:border-gray-400 focus:border-solid focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:opacity-75"
-        tabIndex="0"
-      >
-        {
-        fileName ? <p className="mt-2 text-sm text-gray-700">
-        Uploaded file: <span className="font-medium">{fileName}</span>
-        <input
-          id="photo-dropbox"
-          type="file"
-          className="sr-only"
-          onChange={handleFileChange}
-        />
-      </p>:<><span className="flex items-center space-x-2">
-          <PiCloudArrowDownBold size={22} />
-          <span className="text-xs font-medium text-gray-600">
-            Drop files to Attach, or{" "}
-            <span className="text-[#F50963] underline">browse</span>
-          </span>
-        </span>
-        <input
-          id="photo-dropbox"
-          type="file"
-          className="sr-only"
-          onChange={handleFileChange}
-        /></>
-      }
-      </label>
-      
-    </div>
+
+              <div>
+                <label
+                  htmlFor="photo-dropbox"
+                  className="flex cursor-pointer appearance-none justify-center rounded-md border border-dashed border-gray-300 bg-white px-3 py-3 text-sm transition hover:border-gray-400 focus:border-solid focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:opacity-75"
+                >
+                  {fileName ? (
+                    <p className="mt-2 text-sm text-gray-700">
+                      Uploaded file:{" "}
+                      <span className="font-medium">{fileName}</span>
+                      <input
+                        id="photo-dropbox"
+                        type="file"
+                        className="sr-only"
+                        onChange={handleFileChange}
+                      />
+                    </p>
+                  ) : (
+                    <>
+                      <span className="flex items-center space-x-2">
+                        <PiCloudArrowDownBold size={22} />
+                        <span className="text-xs font-medium text-gray-600">
+                          Drop files to Attach, or{" "}
+                          <span className="text-[#F50963] underline">
+                            browse
+                          </span>
+                        </span>
+                      </span>
+                      <input
+                        id="photo-dropbox"
+                        type="file"
+                        className="sr-only"
+                        onChange={handleFileChange}
+                      />
+                    </>
+                  )}
+                </label>
+              </div>
               <div>
                 <button
                   type="submit"
                   className="w-full bg-primary font-medium text-white p-2 rounded-md hover:bg-gray-800   transition-colors duration-300"
                 >
-                  Sign Up
+                  {loading ? (
+                    <FaSpinner className="m-auto animate-spin" size={24} />
+                  ) : (
+                    "Sign Up"
+                  )}
                 </button>
               </div>
             </form>
             <div className="mt-4 text-sm text-gray-600 text-center">
               <p>
                 Already have an account?{" "}
-                <Link to='/signin' className="text-black hover:underline">
+                <Link to="/signin" className="text-black hover:underline">
                   Signin here
                 </Link>
               </p>

@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-.bg-primary{
-    background-color: #F50963 ;
+.bg-primary {
+  background-color: #f50963;
 }
+.primaryButton {
+    background-color: #f50963;
+    border: 1px solid #f50963;
+    padding: 8px 20px;
+    color: white;
+    border-radius: 7px;
+    transition: all 0.3s ease-in-out; /* Added transition for smoother effect */
+  }
+  
+  .primaryButton:hover {
+    background-color: transparent;
+    border: 1px solid #398EFA;
+    color: #398EFA;
+    border-radius: 6px;
+    transition: all 0.3s ease-in-out; /* Shorter duration for hover effect */
+  }
+  

@@ -24,17 +24,28 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    // Server 
+    // Server
+    const usersCollection = client.db("VocabJp").collection("users");
 
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exist" });
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
 
-
-
+    app.get("/users", async (req, res) => {
+      const user = await usersCollection.find().toArray();
+      res.send(user);
+    });
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Database connect successfully"
-    );
-  } catch(error){
-    console.log(error.name, error.message)
+    console.log("Database connect successfully");
+  } catch (error) {
+    console.log(error.name, error.message);
   }
 }
 run().catch(console.dir);

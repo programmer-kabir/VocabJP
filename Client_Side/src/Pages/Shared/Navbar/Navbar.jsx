@@ -1,20 +1,17 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
-import {
-  FaArrowRightToBracket,
-  FaCodeCompare,
-  FaHeart,
-  FaRegHeart,
-} from "react-icons/fa6";
-import { FiSearch, FiShoppingCart, FiUser } from "react-icons/fi";
-import { BsBagPlus } from "react-icons/bs";
-import logo from "../../../assets/LOGO/LOGO.png";
+import { FaArrowRightToBracket } from "react-icons/fa6";
+// import logo from "../../../assets/LOGO/LOGO.png";
 import { RxCross2 } from "react-icons/rx";
 import { MdArrowForwardIos, MdDashboard } from "react-icons/md";
-// import { LuUser2 } from "react-icons/lu";
+import useAuth from "../../../Utils/Hooks/useAuth";
+import logo from "../../../assets/Logo/7381665.png";
+import Container from "../../../Components/Container/Container";
+import ImageDropdown from "../../../Components/imageDropDown";
 const Navbar = () => {
-  const { user, logOut, loading } = false;
+  const { user, logOut, loading } = useAuth();
+
   const [letter, setLetter] = useState("");
   const [nav, setNav] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -24,6 +21,7 @@ const Navbar = () => {
   const handleNav = () => {
     setNav(!nav);
   };
+  console.log(user?.photoURL);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -66,21 +64,23 @@ const Navbar = () => {
           {loading ? (
             <p>....</p>
           ) : (
-            <div className="z-50  bg-white  py-3  md:py-1 flex justify-between items-center ">
+           <Container>
+             <div className="z-50  bg-white  py-2  md:py-1 flex justify-between items-center ">
               <Link to="/" className="flex items-center  ">
-               <h2>VocabJp</h2>
+                <img className="max-h-12" src={logo} alt="" />
+                {/* <h2>VocabJp</h2> */}
               </Link>
 
               <div className="flex  items-center space-x-5">
-                <div className="hidden md:flex gap-5 items-center">
-                  <Link>asf</Link>
-                </div>
+               <NavLink>Lessons</NavLink>
+               <NavLink>Tutorials</NavLink>
+              </div>
 
                 {/* User */}
                 <div className="flex items-center justify-center gap-3">
                   {user ? (
                     <>
-                      {currentUser[0]?.role === "admin" ? (
+                      {user[0]?.role === "admin" ? (
                         <Link to="admin/dashboard">
                           <div className="secondaryColor">
                             <MdDashboard size={22} />
@@ -96,20 +96,14 @@ const Navbar = () => {
                         </>
                       )}
 
-                      <button
-                        onClick={handleSignOut}
-                        className="border border-slate-200 hover:border-[#398EFA] rounded-md flex gap-1 items-center bg-[#f50400] hover:bg-transparent hover:text-[#398EFA] px-3 py-1 transition-all duration-300 ease-in-out"
-                      >
-                        <LuUser2 size={18} />
-                        <p className="font-bold uppercase text-[15px]">
-                          Logout
-                        </p>
-                      </button>
+                      
+                      
+                     <ImageDropdown />
                     </>
                   ) : (
                     <>
                       <Link to={"/signin"}>
-                        <button className="border ml-2 border-slate-200 hover:border-[#398EFA] rounded-md flex gap-1 items-center bg-[#f50400] hover:bg-transparent hover:text-[#398EFA] px-3 py-1 transition-all duration-300 ease-in-out">
+                        <button className="primaryButton">
                           {/* <LuUser2 size={18} /> */}
                           <p className="font-bold uppercase text-[15px]">
                             Login
@@ -119,7 +113,7 @@ const Navbar = () => {
                     </>
                   )}
                 </div>
-              </div>
+             
 
               {/* Mobile Device */}
               <div onClick={handleNav} className="block  md:hidden">
@@ -155,9 +149,7 @@ const Navbar = () => {
                     </button>
                   </div>
                   <div className="flex flex-col justify-center items-start pt-10 font-medium space-y-3 ">
-                    {/* <MobileDropDown name="Mens's" items={MensItems} />
-                      <MobileDropDown name="Womens's" items={WomensItems} />
-                      <MobileDropDown name="Kid's" items={KidsItems} /> */}
+                    <NavLink></NavLink>
                   </div>
                   <button className="bg-[#F50963] mt-8 flex gap-2 items-center px-5 py-3">
                     <p className=" font-medium">Getting Started </p>
@@ -167,6 +159,7 @@ const Navbar = () => {
                 </div>
               </div>
             </div>
+           </Container>
           )}
 
           <div className="flex justify-end">
